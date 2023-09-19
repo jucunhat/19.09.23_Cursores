@@ -1,27 +1,49 @@
 DO $$
 DECLARE
-	cur_delete REFCURSOR;
-	tupla RECORD;
-BEGIN
-	OPEN cur_delete SCROLL FOR
-		SELECT * FROM tb_top_youtubers;
-	LOOP
-		FETCH cur_delete INTO tupla;
-		EXIT WHEN NOT FOUND;
-		IF tupla.video_count IS NULL THEN
-			DELETE FROM tb_top_youtubers
-			WHERE CURRENT OF cur_delete;
-		END IF;
-	END LOOP;
+	v_video_count INT := 1000;
+	v_category VARCHAR(200) := 'Sports', 'Music';
+	v_youtuber VARCHAR(200);
+	v_rank INT;
+	cur_rank_youtuber CURSOR (contagem INT, categoria varchar(200)) FOR SELECT youtuber, rank from tb_top_youtubers WHERE video_count >= contagem AND category = categoria;
+	TUPLA RECORD;
+	resultado TEXT DEFAULT '';
 	
-	LOOP
-		FETCH BACKWARD FROM cur_delete INTO tupla;
-		EXIT WHEN NOT FOUND;
-		RAISE NOTICE '%', tupla;
+BEGIN
+	OPEN cur_rank_youtuber(contagem := v_video_count, categoria := v_category);
+	FETCH cur_rank_youtuber INTO tupla;
+	WHILE FOUND LOOP
+		resultado := resultado || tupla.youtuber || ';' || tupla.rank || ',';
+		FETCH cur_rank_youtuber INTO tupla;
 	END LOOP;
-	CLOSE cur_delete;
+	CLOSE cur_rank_youtuber;
+	RAISE NOTICE '%', resultado;	
 END;
 $$
+
+-- DO $$
+-- DECLARE
+-- 	cur_delete REFCURSOR;
+-- 	tupla RECORD;
+-- BEGIN
+-- 	OPEN cur_delete SCROLL FOR
+-- 		SELECT * FROM tb_top_youtubers;
+-- 	LOOP
+-- 		FETCH cur_delete INTO tupla;
+-- 		EXIT WHEN NOT FOUND;
+-- 		IF tupla.video_count IS NULL THEN
+-- 			DELETE FROM tb_top_youtubers
+-- 			WHERE CURRENT OF cur_delete;
+-- 		END IF;
+-- 	END LOOP;
+	
+-- 	LOOP
+-- 		FETCH BACKWARD FROM cur_delete INTO tupla;
+-- 		EXIT WHEN NOT FOUND;
+-- 		RAISE NOTICE '%', tupla;
+-- 	END LOOP;
+-- 	CLOSE cur_delete;
+-- END;
+-- $$
 
 -- DO $$
 -- DECLARE
