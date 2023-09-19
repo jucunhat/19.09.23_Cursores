@@ -5,6 +5,21 @@ DECLARE
 BEGIN
 	OPEN cur_delete SCROLL FOR
 		SELECT * FROM tb_top_youtubers;
+	LOOP
+		FETCH cur_delete INTO tupla;
+		EXIT WHEN NOT FOUND;
+		IF tupla.video_count IS NULL THEN
+			DELETE FROM tb_top_youtubers
+			WHERE CURRENT OF cur_delete;
+		END IF;
+	END LOOP;
+	
+	LOOP
+		FETCH BACKWARD FROM cur_delete INTO tupla;
+		EXIT WHEN NOT FOUND;
+		RAISE NOTICE '%', tupla;
+	END LOOP;
+	CLOSE cur_delete;
 END;
 $$
 
